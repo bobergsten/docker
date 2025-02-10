@@ -1,0 +1,43 @@
+---
+version: "3.7"
+services:
+  ts-authkey-test:
+    image: tailscale/tailscale:latest
+    container_name: ts-authkey-test
+    hostname: authkey-test
+    environment:
+      - TS_AUTHKEY=tskey-auth-khG8RGZ6N111CNTRL-2GFJMC9WdFAQP7ET1dE9FAmuPu6cHB7j
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=false
+    volumes:
+      - ./ts-authkey-test/state:/var/lib/tailscale
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+    restart: unless-stopped
+  app:
+    build: .
+    image: my-app-image
+    container_name: my-app-container
+    command: /app/entrypoint.sh
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres
+    container_name: my-postgres-container
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
